@@ -10,5 +10,22 @@
 #' summary(fit)
 #' @export
 linear_model <- function(formula, data) {
-  # Your code here.
+  xm <- model.matrix(formula,data)
+  yname <- paste(as.list(formula)[[2]])
+  ym <- as.matrix(data[,yname])
+  if (det(t(xm)%*%xm) == 0) {
+    beta <- "singular"
+    class(beta) <- c("lm")
+    return(beta[])
+  } else {
+    beta <- solve(t(xm)%*%xm)%*%t(xm)%*%ym
+    class(beta) <- c("lm")
+    colnames(beta) <- "coefficient"
+    return(beta[])
+  }
 }
+
+
+
+
+
