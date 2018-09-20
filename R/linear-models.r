@@ -23,7 +23,7 @@ linear_model <- function(formula, data) {
   fit$rank <- qr(xm)$rank
   fit$df.residuals <- nrow(xm) - qr(xm)$rank
   fit$qr <- qr(xm)
-  fit$call <- lm(formula, data)
+  fit$call <- match.call()
   fit$terms <- terms(x = formula, data = data)
   fit$contrasts <- attr(qr(xm), "contrasts")
   fit$effects <- qr.qty(qr(xm), ym)
