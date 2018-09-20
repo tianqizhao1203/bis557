@@ -13,19 +13,27 @@ linear_model <- function(formula, data) {
   xm <- model.matrix(formula,data)
   yname <- paste(as.list(formula)[[2]])
   ym <- as.matrix(data[,yname])
-  if (det(t(xm)%*%xm) == 0) {
-    beta <- "singular"
-    class(beta) <- c("lm")
-    return(beta[])
-  } else {
-    beta <- solve(t(xm)%*%xm)%*%t(xm)%*%ym
-    class(beta) <- c("lm")
-    colnames(beta) <- "coefficient"
-    return(beta[])
-  }
+  beta <- qr.solve(x, ym)
+  beta[beta == 0] <- NA
+  
+  fit <- list()
+  fit$coefficients <- beta
+  fit$residuals <- ym - xm %*% beta
+  fit$fitted.values <- xm %*% beta
+  fit$rank <- qr(x)$rank
+  fit$df.residuals <- nrow(xm) - qr(x)$rank
+  fit$qr <- qr(xm)
+  fit$call <- lm(formula, data)
+  fit$terms <- terms(x = formula, data = data)
+  fit$contrasts <- attr(qr(xm), "contrasts")
+  fit$effects <- 
+  fit$assign <- attr(qr(xm), "assign")
+  fit$xlevels <- .getXlevels(terms(x = formula, data = data), m = model.frame(data))
+  fit$y <- ym
+  fit$x <- xm
+  fit$model <- model.frame(data)
+  class(fit) <- "lm"
+  return(fit)
 }
-
-
-
 
 
