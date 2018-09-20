@@ -13,15 +13,15 @@ linear_model <- function(formula, data) {
   xm <- model.matrix(formula,data)
   yname <- paste(as.list(formula)[[2]])
   ym <- as.matrix(data[,yname])
-  beta <- qr.solve(x, ym)
+  beta <- qr.solve(xm, ym)
   beta[beta == 0] <- NA
   
   fit <- list()
   fit$coefficients <- beta
   fit$residuals <- ym - xm %*% beta
   fit$fitted.values <- xm %*% beta
-  fit$rank <- qr(x)$rank
-  fit$df.residuals <- nrow(xm) - qr(x)$rank
+  fit$rank <- qr(xm)$rank
+  fit$df.residuals <- nrow(xm) - qr(xm)$rank
   fit$qr <- qr(xm)
   fit$call <- lm(formula, data)
   fit$terms <- terms(x = formula, data = data)
