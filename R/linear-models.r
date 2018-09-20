@@ -11,9 +11,15 @@
 #' @export
 linear_model <- function(formula, data) {
   xm <- model.matrix(formula,data)
+  
+  # Get the name of the y to extract y from the dataset
   yname <- paste(as.list(formula)[[2]])
   ym <- as.matrix(data[,yname])
+  
+  # Calculate beta
   beta <- qr.solve(xm, ym)
+  
+  # Beta = 0 indicates colinearity; changed to NA
   beta[beta == 0] <- NA
   
   fit <- list()
