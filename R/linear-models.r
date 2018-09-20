@@ -26,7 +26,7 @@ linear_model <- function(formula, data) {
   fit$call <- lm(formula, data)
   fit$terms <- terms(x = formula, data = data)
   fit$contrasts <- attr(qr(xm), "contrasts")
-  fit$effects <- 
+  fit$effects <- qr.qty(qr(xm), ym)
   fit$assign <- attr(qr(xm), "assign")
   fit$xlevels <- .getXlevels(terms(x = formula, data = data), m = model.frame(data))
   fit$y <- ym
