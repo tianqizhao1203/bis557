@@ -1,5 +1,3 @@
-devtools::test()
-
 library(testthat)
 
 context("Test the output of homework 1.")
