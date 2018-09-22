@@ -28,13 +28,15 @@ linear_model <- function(formula, data) {
   fit$fitted.values <- xm %*% beta
   fit$rank <- qr(xm)$rank
   fit$df.residuals <- nrow(xm) - qr(xm)$rank
+  fit$weights <- NULL
   fit$qr <- qr(xm)
-  fit$call <- match.call()
+  fit$call <- call("linear_model", formula)
   fit$terms <- terms(x = formula, data = data)
   fit$contrasts <- attr(qr(xm), "contrasts")
   fit$effects <- qr.qty(qr(xm), ym)
   fit$assign <- attr(qr(xm), "assign")
   fit$xlevels <- .getXlevels(terms(x = formula, data = data), m = model.frame(data))
+  fit$offset <- NULL
   fit$y <- ym
   fit$x <- xm
   fit$model <- model.frame(data)
