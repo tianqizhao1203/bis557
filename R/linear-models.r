@@ -14,7 +14,7 @@ linear_model <- function(formula, data) {
   
   # Get the name of the y to extract y from the dataset
   yname <- paste(as.list(formula)[[2]])
-  ym <- as.matrix(data[,yname])
+  ym <- data[,yname]
   
   # Calculate beta
   beta <- qr.solve(xm, ym)
@@ -32,10 +32,8 @@ linear_model <- function(formula, data) {
   fit$qr <- qr(xm)
   fit$call <- call("linear_model", formula)
   fit$terms <- terms(x = formula, data = data)
-  fit$contrasts <- attr(qr(xm), "contrasts")
-  fit$effects <- qr.qty(qr(xm), ym)
-  fit$assign <- attr(qr(xm), "assign")
-  fit$xlevels <- .getXlevels(terms(x = formula, data = data), m = model.frame(data))
+  fit$contrasts <- NULL
+  fit$xlevels <- NULL
   fit$offset <- NULL
   fit$y <- ym
   fit$x <- xm
