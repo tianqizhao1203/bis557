@@ -45,7 +45,6 @@ data(ridge_test)
 
 # Change in out-of-sample MSE as lambda varies
 ```{r}
-library(ggplot2)
 lambda <- log(seq(1, 20000, 0.1))
 formula <- y ~. -1
 ridge_mse <- function(formula, lambda, ridge_test) {
@@ -59,8 +58,7 @@ for (i in 1:length(lambda)) {
   mse_result[i,] <- ridge_mse(formula, lambda[i], ridge_test)
 }
 
-plot1 <- as.data.frame(cbind(lambda, mse_result))
-ggplot(plot1, aes(x = lambda, y = mse_result)) + geom_line()
+plot(lambda, mse_result, type = 'l', xlab = "log(lambda)", ylab = "MSE of Test Set")
 
 lambda[which.min(mse_result)]
 ```
