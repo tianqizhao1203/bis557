@@ -11,6 +11,11 @@ Use SVD to estimate the coefficients in ridge regression.
 \usage{
 ridge_reg(formula, lambda, data)
 }
+\arguments{
+  \item{formula}{Formula for ridge regression.}
+  \item{lambda}{Penalty on beta coefficients.}
+  \item{data}{Dataset for ridge regrssion.}
+}
 \value{
 \item{coefficients }{Estimated betas for ridge regression}
 \item{lambda }{Lambda used for calculating betas}
