@@ -1,0 +1,299 @@
+---
+title: "Homework-4"
+author: "Tianqi Zhao"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Question 2
+We mentioned that the Hessian matrix in Equation 5.19 can be more ill-conditioned
+than the matrix $X^tX$ itself. Generate a matrix $X$ and probabilities
+$p$ such that the linear Hessian $(X^tX)$ is well-conditioned but the
+logistic variation is not.
+
+## Answer:
+Condition number of a matrix is the ratio of the largest singular value to the smallest singular value. A matrix is ill-conditioned if the condition number is very high. In general, when we say a matrix is ill-conditioned, that matrix is almost singular and computing its inverse will lead to large numerical errors.
+```{r}
+x <- diag(c(2, 1))
+lh <- t(x) %*% x
+# compute signular values
+s1_min <- min(svd(lh)$d)
+s1_max <- max(svd(lh)$d)
+# condition number
+c1 <- s1_max/s1_min
+```
+
+The condition number of $X^tX$ is 4, which is small. We know that $(p*(1-p))$ has its maximum value when $p=0.5$ and has its minimum when $p=0\ or 1$. To make the condition number of $X^tdiag(p*(1-p))X$ larger, we can make $p=c(0.5, 0.0000000000001)\ or\ p=c(0.5, 0.999999999999)$.
+
+```{r}
+p <- c(0.5, 0.0000000000001)
+logh <- t(x) %*% diag(p*(1-p)) %*% x
+# compute signular values
+s2_min <- min(svd(logh)$d)
+s2_max <- max(svd(logh)$d)
+# condition number
+c2 <- s2_max/s2_min
+
+p <- c(0.5, 0.99999999999)
+logh <- t(x) %*% diag(p*(1-p)) %*% x
+# compute signular values
+s3_min <- min(svd(logh)$d)
+s3_max <- max(svd(logh)$d)
+# condition number
+c3 <- s3_max/s3_min
+```
+
+The condition numbers of $X^tdiag(p*(1-p))X$ are 1e+13 when $p=c(0.5, 0.0000000000001)$ and 99999991727 when $p=c(0.5, 0.999999999999)$, which are extremely large. Therefore, $X^tX$ is well-conditioned and $X^tdiag(p*(1-p))X$ is ill-conditioned.
+
+
+# Question 4
+It is possible to incorporate a ridge penalty into the maximum likelihood estimator. Modify the function irwls_glm to include an $l_2$-norm penalty on the regression vector for a fixed tuning parameter $\lambda$.
+
+## Answer:
+$$
+\begin{aligned}
+l_{new}(\boldsymbol{\beta}, \lambda) &= l(\boldsymbol{\beta})-\lambda\boldsymbol{\beta}^T\boldsymbol{\beta} \\
+& For\ fixed\ \lambda:\\
+\bigtriangledown l_{new}(\boldsymbol{\beta}) &= \bigtriangledown l(\boldsymbol{\beta}) - 2\lambda\boldsymbol{\beta} \\
+H_{new}(\boldsymbol{\beta}) &= H(\boldsymbol{\beta})-2\lambda\boldsymbol{I}
+\end{aligned}
+$$
+
+Thus, 
+$$
+\begin{aligned}
+\boldsymbol{\beta}^{(k+1)} &= \boldsymbol{\beta}^{(k)} -H_{new}(\boldsymbol{\beta}^{(k)})\bigtriangledown l_{new}(\boldsymbol{\beta}^k) \\
+&= \boldsymbol{\beta}^{(k)}+(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{W}^{-1}(\boldsymbol{y}-\boldsymbol{E(y)}^{(k)})-2\lambda\boldsymbol{\beta}^{(k)}) \\
+&= \boldsymbol{\beta}^{(k)} -2\lambda(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}\boldsymbol{\beta}^{(k)}+(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{W}^{-1}(\boldsymbol{y}-\boldsymbol{E(y)}^{(k)})) \\
+&= (\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}((\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})\boldsymbol{\beta}^{(k)}-2\lambda\boldsymbol{I}\boldsymbol{\beta}^{(k)})+(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{W}^{-1}(\boldsymbol{y}-\boldsymbol{E(y)}^{(k)})) \\
+&= (\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}((\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X})\boldsymbol{\beta}^{(k)})+(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}(\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{W}^{-1}(\boldsymbol{y}-\boldsymbol{E(y)}^{(k)})) \\
+&= (\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}\boldsymbol{X}^T\boldsymbol{W}(\boldsymbol{X}\boldsymbol{\beta}^{(k)}+\boldsymbol{W}^{-1}(\boldsymbol{y}-\boldsymbol{E(y)}^{(k)})) \\
+&= (\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{X}+2\lambda\boldsymbol{I})^{-1}\boldsymbol{X}^T\boldsymbol{W}\boldsymbol{z} \\
+&where\ \boldsymbol{W}=diag(var(\boldsymbol{y}^{(k)})),\ \boldsymbol{z}=\boldsymbol{X}\boldsymbol{\beta}^{(k)}+\boldsymbol{W}^{-1}(\boldsymbol{y}-\boldsymbol{E(y)}^{(k)}))
+\end{aligned}
+$$
+
+Update the function:
+```{r}
+casl_glm_irwls <-
+function(X, y, family, lambda, maxit=25, tol=1e-10) {
+  beta <- rep(0,ncol(X))
+  for(j in seq_len(maxit)) {
+    b_old <- beta
+    eta <- X %*% beta
+    mu <- family$linkinv(eta)
+    mu_p <- family$mu.eta(eta)
+    z <- eta + (y - mu) / mu_p
+    W <- as.numeric(mu_p^2 / family$variance(mu))
+    XtX <- crossprod(X, diag(W) %*% X)
+    Xtz <- crossprod(X, W * z)
+    beta <- solve((XtX + 2*lambda*diag(1, nrow = nrow(XtX), ncol = ncol(XtX))), Xtz)
+    if(sqrt(crossprod(beta - b_old)) < tol) break
+  }
+  beta
+}
+```
+
+# Question
+Consider the sparse matrix implementation from class and the sparse add function:
+```{r}
+sparse_add <- function(a, b) {
+  c <- merge(a, b, by = c("i", "j"), all = TRUE, suffixes = c("1", "2"))
+  c$x1[is.na(c$x1)] <- 0
+  c$x2[is.na(c$x2)] <- 0
+  c$x <- c$x1 + c$x2
+  c[, c("i", "j", "x")]
+}
+
+a <- data.frame(i = c(1, 2, 3), j = c(1, 1, 2), x = c(3, 1, 5))
+b <- data.frame(i = c(1, 2, 2, 3, 4), j = c(1, 1, 2, 1, 1), x = c(4.4, 1.2, 3, 2, 4.2))
+sparse_add(a, b)
+```
+
+- Implement a `sparse_multiply` function that multiplies two sparse matrices.
+```{r}
+sparse_multiply <- function(x, y) {
+  # Check whether two matrices can be multiplied
+  if (max(x$j) != max(y$i)) {
+    stop("Invalid matrix multiplication!")
+  }
+  
+  # Calculate the result of (each row in x * each column in y)
+  sparse <- data.frame()
+  for (g in 1:max(x$i)) {
+    for (h in 1:max(y$j)) {
+      sum <- 0
+      for (z in 1:max(y$i)) {
+        a <- sum(x[x$i == g & x$j == z, ]$x * y[y$i == z & y$j == h, ]$x)
+        sum <- a + sum
+      }
+      row <- cbind(g, h, sum)
+      sparse <- rbind(sparse, row)
+    }
+  }
+  
+  colnames(sparse) <- c("i", "j", "x")
+  # Remove rows with x = 0
+  row_sub <- apply(sparse, 1, function(row) all(row != 0))
+  return(sparse[row_sub, ])
+}
+
+# Test
+#x <- sparse_add(a, b)
+#a1 <- data.frame(i = c(1, 2), j = c(1, 2), x = c(3, 10))
+#b1 <- data.frame(i = c(1, 2, 2), j = c(1, 1, 2), x = c(4.4, 1.2, 3))
+#y <- sparse_add(a1, b1)
+#sparse_multiply(x, y)
+```
+
+- Create a new class `sparse.matrix` that has add `+`, multiply `%*%`, and transpose `t()` methods.
+```{r}
+#' Create a new class sparse.matrix
+#'
+#' @description This function is used for creating a new class called 'sparse.matrix'. 
+#' @param i A vector of row indices for non-zero entries
+#' @param j A vector of column indices for non-zero entries
+#' @param x A vector of the values for non-zero entries at the corresponding (i,j) positions
+#' @param dims The dimension of sparse matrix, and default is the largest coordinates of i and j.
+#' @return A 'sparse.matrix' object.
+#' @examples
+#' sm3 <- sparse.matrix(i = rep(1, 3), j = 1:3, x = 1:3, dims = c(2, 3))
+#' @export
+
+sparse.matrix <- function(i, j, x, dims = c(max(i), max(j))) {
+  s <- data.frame(i, j, x)
+  class(s) <- c("sparse.matrix", "data.frame")
+  # Add dims to attributes
+  attributes(s)$dims <- dims
+  return(s)
+}
+
+#' Define add method for 'sparse.matrix' class
+#'
+#' @description This function is used for defining `+` operation in class "sparse.matrix". 
+#' @param x A 'sparse.matrix' object.
+#' @param y A 'sparse.matirx' object.
+#' @return A 'sparse.matrix' object, which is the result of x + y.
+#' @examples
+#' sm2 <- sparse.matrix(i = c(1, 2, 2), j = c(1, 1, 2), x = c(4.4, 1.2, 3), dims = c(2, 3))
+#' sm3 <- sparse.matrix(i = rep(1, 3), j = 1:3, x = 1:3, dims = c(2, 3))
+#' sm2 + sm3
+#' @export
+
+`+.sparse.matrix` <- function(x, y) {
+  # Report error
+  if (!inherits(y, "sparse.matrix")) {
+    stop("The class of y is not sparse.matrix.")
+  }
+  
+  if ((attributes(x)$dims[1] != attributes(y)$dims[1]) | (attributes(x)$dims[2] != attributes(y)$dims[2])) {
+    stop("Invalid matrix addition!")
+  }
+  
+  c <- merge(x, y, by.x = c('i', 'j'), by.y = c('i', 'j'), all = TRUE, suffixes = c("1", "2"))
+  c$x1[is.na(c$x1)] <- 0
+  c$x2[is.na(c$x2)] <- 0
+  c$x <- rowSums(c[,3:4])
+  add <- c[, c("i", "j", "x")]
+  add <- add[order(add$j), c(1,2,3)]
+  row.names(add) <-1:nrow(add)
+  sparse.matrix(add$i, add$j, add$x, dims = c(attributes(x)$dims[1], attributes(x)$dims[2]))
+}
+
+#' Define transpose method for 'sparse.matrix' class
+#'
+#' @description This function is used for defining `t` operation in class "sparse.matrix". 
+#' @param x A 'sparse.matrix' object.
+#' @return A 'sparse.matrix' object, which is the result of t(x).
+#' @example
+#' sm1 <- sparse.matrix(i = c(1, 2), j = c(1, 1), x = c(3, 1), dims = c(3, 2))
+#' t(sm1)
+#' @export
+
+`t.sparse.matrix` <- function(x) {
+  inter <- cbind(x, NA)
+  # Add an intermediate column to exchange the values between i and j
+  inter[,4] <- inter[,1]
+  inter[,1] <- inter[,2]
+  inter[,2] <- inter[,4]
+  trans <- inter[,-4]
+  sparse.matrix(trans$i, trans$j, trans$x, dims = c(attributes(x)$dims[2], attributes(x)$dims[1]))
+}
+
+#' Default matrix multiplication
+#'
+#' @description This function is used for matrix multiplication.
+#' @export
+
+`%*%.default` = .Primitive("%*%")  
+
+#' Matrix multiplication based on the class of x
+#'
+#' @description This function is used for matrix multiplication.
+#' @param x An object in some class.
+#' @param y An object in some class.
+#' @return An object in some class.
+#' @export
+
+`%*%` <- function(x, y) {
+  UseMethod("%*%", x)
+}
+
+#' Define multiply method for 'sparse.matrix' class
+#'
+#' @description This function is used for defining `%*%` operation in class "sparse.matrix". 
+#' @param x A 'sparse.matrix' object.
+#' @param y A 'sparse.matrix' object.
+#' @return A 'sparse.matrix' object, which is the result of x %*% y.
+#' @example
+#' sm1 <- sparse.matrix(i = c(1, 2), j = c(1, 1), x = c(3, 1), dims = c(3, 2))
+#' sm3 <- sparse.matrix(i = rep(1, 3), j = 1:3, x = 1:3, dims = c(2, 3))
+#' sm1 %*% sm3
+#' @export
+
+`%*%.sparse.matrix` <- function(x, y) {
+  # Report error
+  if (!inherits(y, "sparse.matrix")) {
+    stop("The class of y is not sparse.matrix.")
+  }
+  if (attributes(x)$dims[2] != attributes(y)$dims[1]) {
+    stop("Invalid matrix multiplication!")
+  }
+  
+  sparse <- data.frame()
+  for (g in 1:attributes(x)$dims[1]) {
+    for (h in 1:attributes(y)$dims[2]) {
+      su <- 0
+      for (z in 1:attributes(y)$dims[1]) {
+        a <- sum(x[x$i == g & x$j == z, ]$x * y[y$i == z & y$j == h, ]$x)
+        su <- sum(a, su)
+      }
+      row <- cbind(g, h, su)
+      sparse <- rbind(sparse, row)
+    }
+  }
+  
+  colnames(sparse) <- c("i", "j", "x")
+  # Remove rows with x = 0
+  row_sub <- apply(sparse, 1, function(row) all(row != 0))
+  mul <- sparse[row_sub, ]
+  mul <- mul[order(mul$j), c(1,2,3)]
+  row.names(mul) <-1:nrow(mul)
+  sparse.matrix(mul$i, mul$j, mul$x, dims = c(attributes(x)$dims[1], attributes(y)$dims[2]))
+}
+```
+
+
