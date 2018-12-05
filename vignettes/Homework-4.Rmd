@@ -238,7 +238,7 @@ sparse.matrix <- function(i, j, x, dims = c(max(i), max(j))) {
 #' @description This function is used for matrix multiplication.
 #' @export
 
-`%*%.default` = .Primitive("%*%")  
+`%*%.default` <- .Primitive("%*%")  
 
 #' Matrix multiplication based on the class of x
 #'

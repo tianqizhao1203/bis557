@@ -73,20 +73,7 @@ sparse.matrix <- function(i, j, x, dims = c(max(i), max(j))) {
   sparse.matrix(trans$i, trans$j, trans$x, dims = c(attributes(x)$dims[2], attributes(x)$dims[1]))
 }
 
-#' Default matrix multiplication
-#'
-#' @description This function is used for matrix multiplication.
-#' @export
-
-`%*%.default` = .Primitive("%*%")  
-
-#' Matrix multiplication based on the class of x
-#'
-#' @description This function is used for matrix multiplication.
-#' @param x An object in some class.
-#' @param y An object in some class.
-#' @return An object in some class.
-#' @export
+`%*%.default` <- .Primitive("%*%")  
 
 `%*%` <- function(x, y) {
   UseMethod("%*%", x)
