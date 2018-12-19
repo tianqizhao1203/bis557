@@ -50,7 +50,6 @@ for (i in 1:length(fit$lambda)) {
 
 ose[which.max(ose[,1]),]
 # The out-of-sample accuracy is the highest (0.854) when lambda = 0.002109465
-# But the accuracy is still not high. 
 
 #preds <- predict(fit$glmnet.fit, x_test, s = 0.0008, type = "class")
 #t <- table(as.vector(preds), y_test)
@@ -59,6 +58,8 @@ ose[which.max(ose[,1]),]
 #t <- table(as.vector(preds), y_test)
 #sum(diag(t)) / sum(t)
 ```
+
+The out-of-sample accuracy is the highest (0.854) when lambda = 0.002109465. But the accuracy is still not high. 
 
 Intuitively, to improve the prediction accurary, we can decrease lambda to include more predictors. However, after several attemps, there is still no obvious improvement in Lasso. Probably, around 0.85 is almost the best that Lasso can do. But following in Q2, we can see that CNN can significantly increase the prediction accuracy from 0.85 to 0.99.
 
